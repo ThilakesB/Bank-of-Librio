@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build output
+dist/
+frontend/dist/
+
+# Python
+__pycache__/
+backend/__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Data / Database generated files
+chroma_db/
+uploaded_files/
+
+# Environment / Secret variables
+.env
+*.env.local
+
+# Logs & OS
+*.log
+.DS_Store
+.vscode/
+.idea/

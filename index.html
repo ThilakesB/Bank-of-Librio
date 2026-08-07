@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Botanica AI — ChromaDB RAG System</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#faf9f4",
+                        "surface-container": "#efeee9",
+                        "surface-container-low": "#f5f4ef",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#28351c",
+                        "primary-container": "#3e4c31",
+                        "secondary": "#4d6549",
+                        "secondary-container": "#cce7c4",
+                        "on-surface": "#1b1c19",
+                        "on-surface-variant": "#454840",
+                        "outline-variant": "#c5c8bd"
+                    },
+                    fontFamily: {
+                        sans: ['Manrope', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-shadow-level-1 { box-shadow: 0 4px 20px rgba(62, 76, 49, 0.06); }
+        .custom-shadow-level-2 { box-shadow: 0 8px 30px rgba(62, 76, 49, 0.12); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes pulseDot { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        .dot-1 { animation: pulseDot 1.4s infinite 0s; }
+        .dot-2 { animation: pulseDot 1.4s infinite 0.2s; }
+        .dot-3 { animation: pulseDot 1.4s infinite 0.4s; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-sans h-screen overflow-hidden flex flex-col selection:bg-secondary-container selection:text-primary">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-surface/90 backdrop-blur-md border-b border-outline-variant/30 px-6 h-16 shrink-0 flex items-center justify-between z-30 relative">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-secondary-container to-primary-container/20 flex items-center justify-center custom-shadow-level-1">
+                <span class="material-symbols-outlined text-primary text-xl">park</span>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg text-primary leading-tight">Botanica AI</h1>
+                <p class="text-xs text-on-surface-variant flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-600 inline-block animate-pulse"></span>
+                    <span id="db-status-badge">ChromaDB Connected</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Knowledge Stats Pill -->
+            <button onclick="toggleDocDrawer()" class="bg-secondary-container/60 hover:bg-secondary-container text-primary text-xs font-semibold px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-base">database</span>
+                <span id="stat-chunks-count">0 Chunks</span>
+                <span class="text-primary/40">•</span>
+                <span id="stat-docs-count">0 Documents</span>
+            </button>
+
+            <!-- Upload File Button -->
+            <button onclick="openUploadModal()" class="bg-primary-container text-white hover:bg-primary text-xs font-medium px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-base">cloud_upload</span>
+                <span>Upload Data</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <div class="flex-1 flex min-h-0 relative">
+
+        <!-- Chat Feed Area -->
+        <main class="flex-1 flex flex-col relative h-full overflow-hidden">
+            
+            <!-- Background Artwork Overlay -->
+            <div class="absolute inset-0 z-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(#3e4c31 0.75px, transparent 0.75px); background-size: 16px 16px;"></div>
+
+            <!-- Messages Scroll Container -->
+            <div id="chat-feed" class="flex-1 overflow-y-auto px-4 py-6 lg:px-8 z-10 flex justify-center scrollbar-hide">
+                <div class="w-full max-w-[800px] flex flex-col gap-6 pb-36 pt-2">
+                    
+                    <!-- Welcome Hero -->
+                    <div id="welcome-hero" class="flex flex-col items-center justify-center text-center my-6 animate-fade-in">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-secondary-container to-surface-container flex items-center justify-center mb-4 custom-shadow-level-1">
+                            <span class="material-symbols-outlined text-primary text-3xl">auto_awesome</span>
+                        </div>
+                        <h2 class="text-2xl lg:text-3xl font-bold text-primary mb-2">How can I assist your analytical research today?</h2>
+                        <p class="text-on-surface-variant text-sm max-w-md">Query your vector database, bank customer datasets (`BankCustomerData.csv`), PDFs, spreadsheets, and document knowledge base powered by ChromaDB.</p>
+
+                        <!-- Suggested Query Chips -->
+                        <div class="flex flex-wrap justify-center gap-2 mt-6">
+                            <button onclick="setQuery('Show me customer records with high balance in the bank dataset')" class="bg-surface-container-low hover:bg-secondary-container/70 border border-outline-variant/30 text-primary text-xs font-medium px-3.5 py-2 rounded-lg transition-all">
+                                📊 Search Bank Customer Balances
+                            </button>
+                            <button onclick="setQuery('What document file types are indexed in ChromaDB?')" class="bg-surface-container-low hover:bg-secondary-container/70 border border-outline-variant/30 text-primary text-xs font-medium px-3.5 py-2 rounded-lg transition-all">
+                                📁 Check Indexed File Types
+                            </button>
+                            <button onclick="setQuery('Summarize key findings from the uploaded document')" class="bg-surface-container-low hover:bg-secondary-container/70 border border-outline-variant/30 text-primary text-xs font-medium px-3.5 py-2 rounded-lg transition-all">
+                                📝 Document Summary
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Initial AI Welcome Message -->
+                    <div class="flex gap-3 max-w-[90%] md:max-w-[85%] self-start">
+                        <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center shrink-0 mt-1">
+                            <span class="material-symbols-outlined text-primary text-sm">eco</span>
+                        </div>
+                        <div class="bg-surface-container-lowest text-primary p-4 rounded-2xl rounded-tl-sm border border-secondary/20 custom-shadow-level-1 text-sm leading-relaxed">
+                            Hello! I am <strong>Botanica AI</strong>, integrated directly with your <strong>ChromaDB vector store</strong>. I can query tabular customer datasets, spreadsheets, PDFs, DOCX, CSV, TXT, and JSON files with precise metadata citation. What would you like to explore?
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Fixed Bottom Floating Input Bar -->
+            <div class="absolute bottom-0 left-0 w-full p-4 lg:p-6 z-20 flex justify-center bg-gradient-to-t from-surface via-surface/90 to-transparent pt-8">
+                <div class="w-full max-w-[800px] relative">
+                    <form onsubmit="handleQuerySubmit(event)" class="bg-surface-container-lowest rounded-2xl custom-shadow-level-2 border border-outline-variant/30 flex items-end p-2 transition-all focus-within:ring-2 focus-within:ring-primary/20">
+                        <textarea id="user-input" rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize(this)" placeholder="Ask ChromaDB RAG..." class="w-full bg-transparent border-none focus:ring-0 resize-none max-h-32 min-h-[44px] py-2 px-3 text-sm text-on-surface placeholder-on-surface-variant/70 caret-secondary scrollbar-hide"></textarea>
+                        <button type="submit" id="send-btn" class="bg-primary-container text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-primary transition-all shrink-0 mb-[2px] ml-2 shadow-sm">
+                            <span class="material-symbols-outlined">arrow_upward</span>
+                        </button>
+                    </form>
+                    <div class="text-center mt-2">
+                        <span class="text-[11px] text-on-surface-variant/60 font-medium">ChromaDB Similarity Search & In-Memory Metadata Indexing</span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Document Drawer Side Panel (Collapsible) -->
+        <aside id="doc-drawer" class="w-80 bg-surface-container-low border-l border-outline-variant/30 p-4 flex flex-col gap-4 hidden lg:flex shrink-0 z-20">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-sm text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base">folder_open</span>
+                    <span>Indexed Knowledge</span>
+                </h3>
+                <button onclick="fetchDocsStats()" class="text-on-surface-variant hover:text-primary p-1 rounded-full text-xs">
+                    <span class="material-symbols-outlined text-base">refresh</span>
+                </button>
+            </div>
+
+            <!-- Ingest Kaggle Bank Dataset Quick Card -->
+            <div class="bg-surface-container-lowest p-3.5 rounded-xl border border-secondary/30 custom-shadow-level-1">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-symbols-outlined text-secondary text-lg">account_balance</span>
+                    <span class="font-semibold text-xs text-primary">Bank Customer Dataset</span>
+                </div>
+                <p class="text-[11px] text-on-surface-variant mb-3">Load `garimam/bank-customer-dataset` (`BankCustomerData.csv`) into ChromaDB.</p>
+                <button onclick="ingestKaggleDataset()" id="kaggle-btn" class="w-full bg-secondary-container hover:bg-secondary-container/80 text-primary text-xs font-semibold py-1.5 rounded-lg transition-all flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                    <span>Ingest Bank Dataset</span>
+                </button>
+            </div>
+
+            <!-- File List Container -->
+            <div class="flex-1 overflow-y-auto scrollbar-hide flex flex-col gap-2">
+                <div class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Indexed Files</div>
+                <div id="doc-list-container" class="flex flex-col gap-2 text-xs">
+                    <div class="text-on-surface-variant italic py-2 text-center">Loading files...</div>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-surface-container-lowest rounded-2xl max-w-md w-full p-6 custom-shadow-level-2 border border-outline-variant/30 flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-base text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined text-xl">cloud_upload</span>
+                    <span>Upload Documents to ChromaDB</span>
+                </h3>
+                <button onclick="closeUploadModal()" class="text-on-surface-variant hover:text-primary">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <p class="text-xs text-on-surface-variant leading-relaxed">
+                Supported formats: <strong>PDF, DOCX, XLSX, CSV, TXT, MD, HTML, JSON</strong>. Documents will be chunked into 300–1000 character blocks with metadata and saved to ChromaDB.
+            </p>
+
+            <div id="drop-area" class="border-2 border-dashed border-outline-variant/60 rounded-xl p-6 text-center bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+                <input type="file" id="file-input" multiple class="hidden" onchange="handleFileSelect(event)" accept=".pdf,.docx,.xlsx,.csv,.txt,.md,.json,.html"/>
+                <label for="file-input" class="cursor-pointer flex flex-col items-center gap-2">
+                    <span class="material-symbols-outlined text-3xl text-secondary">upload_file</span>
+                    <span class="text-xs font-semibold text-primary">Click to upload or drag files here</span>
+                    <span class="text-[10px] text-on-surface-variant">Max file size 50MB</span>
+                </label>
+            </div>
+
+            <div id="upload-progress" class="hidden text-xs text-secondary font-medium flex items-center gap-2">
+                <span class="material-symbols-outlined animate-spin text-base">progress_activity</span>
+                <span id="upload-progress-text">Processing and embedding into ChromaDB...</span>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-2">
+                <button onclick="closeUploadModal()" class="px-4 py-2 text-xs font-semibold text-on-surface-variant hover:bg-surface-container rounded-lg">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chunk Inspector Modal -->
+    <div id="inspector-modal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-surface-container-lowest rounded-2xl max-w-2xl w-full p-6 max-h-[85vh] flex flex-col gap-4 custom-shadow-level-2 border border-outline-variant/30">
+            <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+                <h3 class="font-bold text-base text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined text-xl">manage_search</span>
+                    <span>Retrieved ChromaDB Vector Chunks</span>
+                </h3>
+                <button onclick="closeInspectorModal()" class="text-on-surface-variant hover:text-primary">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div id="inspector-content" class="flex-1 overflow-y-auto space-y-3 text-xs scrollbar-hide">
+                <!-- Chunks rendered dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000/api";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchDocsStats();
+            checkHealth();
+        });
+
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleQuerySubmit(e);
+            }
+        }
+
+        function setQuery(text) {
+            const textarea = document.getElementById("user-input");
+            textarea.value = text;
+            autoResize(textarea);
+            textarea.focus();
+        }
+
+        async function checkHealth() {
+            try {
+                const res = await fetch(`${API_BASE}/health`);
+                const data = await res.json();
+                if (data.status === "ok") {
+                    document.getElementById("db-status-badge").textContent = `ChromaDB Active (${data.stats.total_chunks} chunks)`;
+                }
+            } catch (err) {
+                document.getElementById("db-status-badge").textContent = "ChromaDB Connecting...";
+            }
+        }
+
+        async function fetchDocsStats() {
+            try {
+                const res = await fetch(`${API_BASE}/documents`);
+                const data = await res.json();
+                document.getElementById("stat-chunks-count").textContent = `${data.total_chunks} Chunks`;
+                document.getElementById("stat-docs-count").textContent = `${data.document_count} Docs`;
+
+                const container = document.getElementById("doc-list-container");
+                if (data.documents && data.documents.length > 0) {
+                    container.innerHTML = data.documents.map(doc => `
+                        <div class="bg-surface-container-lowest p-2.5 rounded-lg border border-outline-variant/20 flex items-center justify-between">
+                            <div class="flex items-center gap-2 overflow-hidden">
+                                <span class="material-symbols-outlined text-secondary text-base">description</span>
+                                <span class="truncate font-medium text-primary">${doc}</span>
+                            </div>
+                            <button onclick="deleteDoc('${doc}')" class="text-on-surface-variant/50 hover:text-red-600 p-1">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                        </div>
+                    `).join("");
+                } else {
+                    container.innerHTML = `<div class="text-on-surface-variant italic py-2 text-center">No documents uploaded yet</div>`;
+                }
+            } catch (err) {
+                console.error("Error fetching doc stats:", err);
+            }
+        }
+
+        async function deleteDoc(filename) {
+            if (!confirm(`Delete ${filename} from ChromaDB?`)) return;
+            try {
+                await fetch(`${API_BASE}/documents/${encodeURIComponent(filename)}`, { method: "DELETE" });
+                fetchDocsStats();
+                checkHealth();
+            } catch (err) {
+                alert("Error deleting file");
+            }
+        }
+
+        async function ingestKaggleDataset() {
+            const btn = document.getElementById("kaggle-btn");
+            btn.disabled = true;
+            btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-sm">progress_activity</span> Ingesting...`;
+            try {
+                const res = await fetch(`${API_BASE}/ingest-kaggle`, { method: "POST" });
+                const data = await res.json();
+                if (data.status === "success") {
+                    alert("Bank Customer Dataset successfully ingested into ChromaDB!");
+                    fetchDocsStats();
+                    checkHealth();
+                } else {
+                    alert("Error: " + data.detail);
+                }
+            } catch (err) {
+                alert("Kaggle dataset ingestion triggered or dataset already available.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span class="material-symbols-outlined text-sm">download</span> Ingest Bank Dataset`;
+            }
+        }
+
+        function openUploadModal() { document.getElementById("upload-modal").classList.remove("hidden"); }
+        function closeUploadModal() { document.getElementById("upload-modal").classList.add("hidden"); }
+        function toggleDocDrawer() { document.getElementById("doc-drawer").classList.toggle("hidden"); }
+        function closeInspectorModal() { document.getElementById("inspector-modal").classList.add("hidden"); }
+
+        async function handleFileSelect(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            const progress = document.getElementById("upload-progress");
+            progress.classList.remove("hidden");
+
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append("files", files[i]);
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/upload`, {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await res.json();
+                progress.classList.add("hidden");
+                closeUploadModal();
+                fetchDocsStats();
+                checkHealth();
+
+                // Append notification message to chat
+                const uploadCount = data.uploaded.reduce((acc, f) => acc + f.chunks_added, 0);
+                appendAIMessage(`Successfully ingested ${files.length} file(s) (${uploadCount} chunks) into ChromaDB vector database.`);
+            } catch (err) {
+                progress.classList.add("hidden");
+                alert("Upload failed. Ensure backend server is running.");
+            }
+        }
+
+        async function handleQuerySubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById("user-input");
+            const query = input.value.trim();
+            if (!query) return;
+
+            // Hide welcome hero if visible
+            const hero = document.getElementById("welcome-hero");
+            if (hero) hero.classList.add("hidden");
+
+            // Append User Message
+            appendUserMessage(query);
+            input.value = "";
+            autoResize(input);
+
+            // Append Typing Indicator
+            const typingId = appendTypingIndicator();
+
+            try {
+                const res = await fetch(`${API_BASE}/query`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ query: query, top_k: 5 })
+                });
+
+                const data = await res.json();
+                removeTypingIndicator(typingId);
+
+                // Append AI Response
+                appendAIMessage(data.answer, data.citations, data.retrieved_chunks);
+            } catch (err) {
+                removeTypingIndicator(typingId);
+                appendAIMessage("Sorry, unable to connect to the backend server. Please make sure `app.py` is running on port 8000.");
+            }
+        }
+
+        function appendUserMessage(text) {
+            const feed = document.getElementById("chat-feed").firstElementChild;
+            const msgDiv = document.createElement("div");
+            msgDiv.className = "flex gap-3 max-w-[90%] md:max-w-[85%] self-end flex-row-reverse animate-fade-in";
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center shrink-0 mt-1 text-xs font-semibold">
+                    You
+                </div>
+                <div class="bg-primary-container text-white p-4 rounded-2xl rounded-tr-sm custom-shadow-level-1 text-sm leading-relaxed">
+                    ${escapeHtml(text)}
+                </div>
+            `;
+            feed.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        function appendAIMessage(answerText, citations = [], chunks = []) {
+            const feed = document.getElementById("chat-feed").firstElementChild;
+            const msgDiv = document.createElement("div");
+            msgDiv.className = "flex gap-3 max-w-[90%] md:max-w-[85%] self-start animate-fade-in";
+            
+            let citationsHtml = "";
+            if (citations && citations.length > 0) {
+                const sourcesStr = citations.map(c => `${c.source} (${c.file_type})`).join(", ");
+                citationsHtml = `
+                    <div class="mt-3 pt-3 border-t border-outline-variant/30 flex items-center justify-between">
+                        <div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
+                            <span class="material-symbols-outlined text-base text-secondary">description</span>
+                            <span>Sources: <strong>${escapeHtml(sourcesStr)}</strong></span>
+                        </div>
+                        <button onclick='openInspector(${JSON.stringify(chunks).replace(/'/g, "&apos;")})' class="text-xs text-secondary font-semibold hover:underline flex items-center gap-1">
+                            <span>Inspect Chunks</span>
+                            <span class="material-symbols-outlined text-sm">open_in_new</span>
+                        </button>
+                    </div>
+                `;
+            }
+
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center shrink-0 mt-1">
+                    <span class="material-symbols-outlined text-primary text-sm">eco</span>
+                </div>
+                <div class="bg-surface-container-lowest text-primary p-4 rounded-2xl rounded-tl-sm border border-secondary/20 custom-shadow-level-1 text-sm leading-relaxed">
+                    <div>${formatMarkdown(answerText)}</div>
+                    ${citationsHtml}
+                </div>
+            `;
+            feed.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        function appendTypingIndicator() {
+            const feed = document.getElementById("chat-feed").firstElementChild;
+            const id = "typing-" + Date.now();
+            const msgDiv = document.createElement("div");
+            msgDiv.id = id;
+            msgDiv.className = "flex gap-3 max-w-[90%] md:max-w-[85%] self-start";
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center shrink-0 mt-1">
+                    <span class="material-symbols-outlined text-primary text-sm">eco</span>
+                </div>
+                <div class="bg-surface-container-lowest text-primary px-4 py-3 rounded-2xl rounded-tl-sm border border-secondary/20 custom-shadow-level-1 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-secondary dot-1"></span>
+                    <span class="w-2 h-2 rounded-full bg-secondary dot-2"></span>
+                    <span class="w-2 h-2 rounded-full bg-secondary dot-3"></span>
+                </div>
+            `;
+            feed.appendChild(msgDiv);
+            scrollToBottom();
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function openInspector(chunks) {
+            const modal = document.getElementById("inspector-modal");
+            const container = document.getElementById("inspector-content");
+
+            if (!chunks || chunks.length === 0) {
+                container.innerHTML = `<p class="text-on-surface-variant italic">No raw chunks available.</p>`;
+            } else {
+                container.innerHTML = chunks.map((c, i) => `
+                    <div class="bg-surface-container-low p-3 rounded-xl border border-outline-variant/30 space-y-2">
+                        <div class="flex items-center justify-between text-[11px] font-semibold text-primary">
+                            <span>Chunk #${i+1} — ${escapeHtml(c.metadata.source || c.metadata.filename || 'Unknown')}</span>
+                            <span class="bg-secondary-container text-primary px-2 py-0.5 rounded-md">Similarity: ${(c.similarity * 100).toFixed(1)}%</span>
+                        </div>
+                        <pre class="whitespace-pre-wrap font-mono text-[11px] text-on-surface bg-surface-container-lowest p-2.5 rounded-lg border border-outline-variant/20 max-h-40 overflow-y-auto">${escapeHtml(c.content)}</pre>
+                    </div>
+                `).join("");
+            }
+
+            modal.classList.remove("hidden");
+        }
+
+        function scrollToBottom() {
+            const feed = document.getElementById("chat-feed");
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            return str ? str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
+        }
+
+        function formatMarkdown(str) {
+            if (!str) return "";
+            return str
+                .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                .replace(/```text\n([\s\S]*?)\n```/g, "<pre class='bg-surface-container-low p-3 rounded-lg font-mono text-xs my-2 overflow-x-auto border border-outline-variant/30'>$1</pre>")
+                .replace(/\n\n/g, "<br/><br/>")
+                .replace(/\n- /g, "<br/>• ");
+        }
+    </script>
+</body>
+</html>

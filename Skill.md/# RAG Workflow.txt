@@ -1,0 +1,114 @@
+# Document Processing Flow
+
+```
+                Documents
+                    │
+     ┌──────────────┼──────────────┐
+     │              │              │
+     ▼              ▼              ▼
+   PDF           Word (.docx)   Excel (.xlsx)
+     │              │              │
+     └──────────────┼──────────────┘
+                    │
+                    ▼
+          Document Loader
+                    │
+                    ▼
+        Extract Raw Text / Tables
+                    │
+                    ▼
+      Clean & Normalize the Content
+                    │
+                    ▼
+      Split Into Small Chunks
+       (e.g. 500-1000 characters)
+                    │
+                    ▼
+        Generate Embeddings
+                    │
+                    ▼
+           Store in Vector DB
+                    │
+                    ▼
+         Ready for Semantic Search
+```
+
+## Supported File Types
+
+- PDF
+- DOCX (Microsoft Word)
+- XLSX (Microsoft Excel)
+- CSV
+- TXT
+- Markdown
+- HTML
+- JSON
+
+## Chunking Strategy
+
+### PDF
+- Split by paragraphs or pages.
+
+### Word
+- Split by headings and paragraphs.
+
+### Excel
+- Read each sheet.
+- Convert each row or logical table into text.
+- Create chunks per row or group of rows.
+
+Example:
+
+Sheet: Employees
+
+| ID | Name | Department |
+|----|------|------------|
+|101 | John | HR |
+|102 | Alice| IT |
+
+becomes
+
+```
+Employee ID: 101
+Name: John
+Department: HR
+```
+
+```
+Employee ID: 102
+Name: Alice
+Department: IT
+```
+
+Each record is embedded separately.
+
+## Retrieval Pipeline
+
+```
+User Question
+      │
+      ▼
+Embedding
+      │
+      ▼
+Similarity Search
+      │
+      ▼
+Top-K Chunks
+      │
+      ▼
+Build Prompt
+      │
+      ▼
+LLM
+      │
+      ▼
+Final Answer
+```
+
+## Best Practices
+
+- Preserve metadata (filename, page number, sheet name, row number).
+- Keep chunk sizes between 300–1000 tokens.
+- Add overlap (50–100 tokens) to maintain context.
+- Store metadata alongside embeddings for citations.

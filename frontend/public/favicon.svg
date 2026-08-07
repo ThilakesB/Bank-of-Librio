@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="ringGrad" x1="5%" y1="20%" x2="95%" y2="80%">
+      <stop offset="0%" stop-color="#b07cfb" />
+      <stop offset="25%" stop-color="#7c3aed" />
+      <stop offset="50%" stop-color="#2563eb" />
+      <stop offset="75%" stop-color="#1d4ed8" />
+      <stop offset="100%" stop-color="#0b132b" />
+    </linearGradient>
+    <radialGradient id="sphereGrad" cx="38%" cy="32%" r="68%">
+      <stop offset="0%" stop-color="#1c1c24" />
+      <stop offset="60%" stop-color="#0a0a0d" />
+      <stop offset="100%" stop-color="#000000" />
+    </radialGradient>
+  </defs>
+
+  <!-- Back portion of ring (behind sphere on top-right) -->
+  <path d="M 175 220 C 130 180 230 140 340 170 C 400 186 430 215 390 240 C 330 220 220 220 175 220 Z" fill="#1e1b4b" />
+
+  <!-- Black Central Sphere -->
+  <circle cx="256" cy="256" r="112" fill="url(#sphereGrad)" />
+
+  <!-- Front swooping ring -->
+  <path d="M 96 256 C 96 195 180 180 270 225 C 360 270 416 260 416 220 C 416 195 385 185 340 205 C 240 250 150 250 100 240 Z" fill="url(#ringGrad)" />
+  <path d="M 96 256 C 96 300 160 295 245 260 C 330 225 416 210 416 256 C 416 300 330 315 220 295 C 130 280 96 270 96 256 Z" fill="url(#ringGrad)" />
+</svg>

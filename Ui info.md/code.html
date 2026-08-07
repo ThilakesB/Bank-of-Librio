@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Botanica AI Chatbot</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#c2cab3",
+                        "surface-container-low": "#f5f4ef",
+                        "on-background": "#1b1c19",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#454840",
+                        "surface-tint": "#546346",
+                        "on-secondary-fixed": "#0a200a",
+                        "surface": "#faf9f4",
+                        "tertiary": "#2c3424",
+                        "inverse-surface": "#30312e",
+                        "surface-container-highest": "#e3e3de",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed-variant": "#3d4b30",
+                        "surface-dim": "#dbdad5",
+                        "surface-bright": "#faf9f4",
+                        "error": "#ba1a1a",
+                        "primary": "#28351c",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#1b1c19",
+                        "surface-variant": "#e3e3de",
+                        "surface-container-high": "#e9e8e3",
+                        "on-primary-container": "#acbc9a",
+                        "surface-container": "#efeee9",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#3e4c31",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#424938",
+                        "secondary-container": "#cce7c4",
+                        "primary-fixed": "#d8e8c4",
+                        "secondary-fixed-dim": "#b3ceac",
+                        "on-tertiary-fixed": "#171e0f",
+                        "tertiary-container": "#434a39",
+                        "on-primary-fixed": "#131f08",
+                        "primary-fixed-dim": "#bccca9",
+                        "on-secondary-fixed-variant": "#354c33",
+                        "inverse-primary": "#bccca9",
+                        "error-container": "#ffdad6",
+                        "outline-variant": "#c5c8bd",
+                        "secondary": "#4d6549",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#cfeac7",
+                        "on-tertiary-container": "#b1b9a3",
+                        "outline": "#75786f",
+                        "background": "#faf9f4",
+                        "on-secondary-container": "#51694d",
+                        "tertiary-fixed": "#dee6ce"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "gutter": "20px",
+                        "container-max": "800px",
+                        "base": "4px",
+                        "md": "16px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Manrope"],
+                        "label-md": ["Manrope"],
+                        "headline-lg": ["Manrope"],
+                        "label-sm": ["Manrope"],
+                        "headline-lg-mobile": ["Manrope"],
+                        "headline-md": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "headline-xl": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .custom-shadow-level-1 { box-shadow: 0 4px 20px rgba(62, 76, 49, 0.06); }
+        .custom-shadow-level-2 { box-shadow: 0 8px 30px rgba(62, 76, 49, 0.12); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md h-screen overflow-hidden flex selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col relative min-w-0 h-full overflow-hidden">
+<!-- Background Image for Chat Area -->
+<div class="absolute inset-0 z-0 opacity-15 pointer-events-none" data-alt="A subtle, impressionistic botanical painting featuring white flowers on delicate vines against a textured, pale sage green background." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCzGzuwaD9lhmUY2NbMs4oP-aSPWswB6wkndCYVcNC818mLV-4hWKiGIGkUJBDqbNH1_Zye8RSAj-8Bnt7TmJxIexRmcLtSq1AcJAWpVnL2HPi-tzaRwJtjfww09byGEP0951jBMVlomZUc13_e8WEFKuiKELgLLT6uMjpwqODxl3xpwv5lXSqBkVHI75AtYuS0iLRSCAgECUkzx5p3qPwvOc-me-x9dUCrPv6CPPBSuAL35_joNYVgXy8-z1MTagooIbY'); background-size: cover; background-position: center;"></div>
+<!-- TopAppBar -->
+<header class="bg-surface/80 backdrop-blur-md shadow-sm full-width top-0 z-50 flex justify-between items-center px-lg h-16 shrink-0 relative">
+<div class="flex items-center gap-md lg:hidden">
+<button class="text-on-surface-variant p-sm rounded-full hover:bg-surface-container-highest/50 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Botanica AI</h1>
+</div>
+<div class="hidden lg:block">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Botanica AI</h2>
+</div>
+<div class="flex items-center gap-sm">
+<button class="text-on-surface-variant p-sm rounded-full hover:bg-surface-container-highest/50 transition-colors active:scale-95 duration-200 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="text-on-surface-variant p-sm rounded-full hover:bg-surface-container-highest/50 transition-colors active:scale-95 duration-200 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<img alt="User profile" class="w-8 h-8 rounded-full border border-outline-variant/30 object-cover ml-xs" data-alt="A minimalist, stylized circular profile avatar depicting a subtle sage green leaf motif." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDq7KbqPiVRMAiIar23aDrOyqf7i3ePKm-Fy5-RBOszg6IJhgPkYgMtRSZ9HhTlWoKxOH0w_joSlwTnbWX_1OXgm1lp9rHbUHZbjhM_MPMYt0GBIdguKS3HxbHT4oYE_Nk1vsha3p8IexasWMnGXDPnbxjkNlEDT0gHrcymmHdTqdFOQigBjWPU2KNE76upjettqtuX1Maizfrvy6p24W0MJBu4DILVlAH1jweltlcw_EssOeBDx4GwGQ"/>
+</div>
+</header>
+<!-- Chat History Area -->
+<div class="flex-1 overflow-y-auto px-md py-lg lg:px-lg z-10 flex justify-center scrollbar-hide">
+<div class="w-full max-w-[800px] flex flex-col gap-xl pb-32 pt-md">
+<!-- Initial Greeting -->
+<div class="flex flex-col items-center justify-center text-center my-xl">
+<div class="w-16 h-16 rounded-full bg-gradient-to-br from-secondary-container to-surface-tint/20 flex items-center justify-center mb-md custom-shadow-level-1">
+<span class="material-symbols-outlined text-primary text-[32px]" data-icon="park">park</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-sm">How can I assist your growth today?</h2>
+<p class="text-on-surface-variant font-body-lg text-body-lg max-w-lg">Ask me about your documents, research topics, or natural language tasks.</p>
+</div>
+<!-- Suggested Queries -->
+<div class="flex flex-wrap justify-center gap-sm mb-lg">
+<button class="bg-[#D1D9C2] text-primary-container font-label-sm text-label-sm px-md py-xs rounded-lg hover:bg-secondary-fixed transition-colors">Summarize recent articles</button>
+<button class="bg-[#D1D9C2] text-primary-container font-label-sm text-label-sm px-md py-xs rounded-lg hover:bg-secondary-fixed transition-colors">Extract key findings</button>
+<button class="bg-[#D1D9C2] text-primary-container font-label-sm text-label-sm px-md py-xs rounded-lg hover:bg-secondary-fixed transition-colors">Draft a project outline</button>
+</div>
+<!-- AI Message -->
+<div class="flex gap-md max-w-[90%] md:max-w-[85%] self-start animate-[fadeIn_0.5s_ease-out]">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center shrink-0 mt-xs">
+<span class="material-symbols-outlined text-on-secondary-container text-[18px]" data-icon="eco">eco</span>
+</div>
+<div class="bg-surface-container-lowest text-primary p-md rounded-2xl rounded-tl-sm border border-secondary/20 custom-shadow-level-1">
+<p class="font-body-md text-body-md">Hello. I am Botanica, your natural guide. I have access to your uploaded knowledge base. What would you like to explore?</p>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex gap-md max-w-[90%] md:max-w-[85%] self-end flex-row-reverse animate-[fadeIn_0.5s_ease-out_0.2s_both]">
+<div class="w-8 h-8 rounded-full bg-surface-variant shrink-0 mt-xs overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A minimalist, stylized circular profile avatar depicting a subtle sage green leaf motif." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpSi4ZrBW3EVUYCXsihLEB7dCHxW5UKz0Bl1xfjyaV__fMH9JPwOBAR5o7JGjfNQiwKmjwU4Byvp3Odae3XRo2Wxlp4Gr2N3gLTg-YnUyC9hIQOPEjyPXDuGO0FDT2lXL-I-ptv1I2x5c-NEB7-xwBVBZ3dyDO6hVbrBjjhyco_eiK9o2eVKMbTdnD3bRZE0E_kyhy7csw9MouJkfMinM1ujRmFFg8EURhI9553RhO8clZ_FwbEusnFQ"/>
+</div>
+<div class="bg-primary-container text-white p-md rounded-2xl rounded-tr-sm custom-shadow-level-1">
+<p class="font-body-md text-body-md">Can you summarize the methodology section from the latest botanical research paper I uploaded yesterday?</p>
+</div>
+</div>
+<!-- AI Message -->
+<div class="flex gap-md max-w-[90%] md:max-w-[85%] self-start animate-[fadeIn_0.5s_ease-out_0.4s_both]">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center shrink-0 mt-xs">
+<span class="material-symbols-outlined text-on-secondary-container text-[18px]" data-icon="eco">eco</span>
+</div>
+<div class="bg-surface-container-lowest text-primary p-md rounded-2xl rounded-tl-sm border border-secondary/20 custom-shadow-level-1">
+<p class="font-body-md text-body-md mb-md">Certainly. Based on the document "Phytoremediation_Techniques_2023.pdf", the methodology relies on a three-phase approach:</p>
+<ol class="list-decimal pl-lg space-y-sm font-body-md text-body-md mb-md">
+<li><strong>Soil Inoculation:</strong> Introducing specific mycorrhizal fungi to the contaminated soil samples to enhance root absorption capabilities.</li>
+<li><strong>Controlled Cultivation:</strong> Growing the selected <em>Salix viminalis</em> (Basket Willow) specimens in a greenhouse environment with strict temperature (22°C) and humidity (60%) controls for 90 days.</li>
+<li><strong>Heavy Metal Analysis:</strong> Utilizing atomic absorption spectroscopy (AAS) to measure the concentration of cadmium and lead in both the plant tissues (roots, stems, leaves) and the residual soil.</li>
+</ol>
+<div class="flex items-center gap-xs mt-sm pt-sm border-t border-outline-variant/20">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="description">description</span>
+<span class="text-xs font-label-sm text-on-surface-variant">Source: Phytoremediation_Techniques_2023.pdf (Pages 4-6)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Area (Fixed Bottom) -->
+<div class="absolute bottom-0 left-0 w-full p-md lg:p-lg z-20 flex justify-center bg-gradient-to-t from-surface via-surface/90 to-transparent pt-xl">
+<div class="w-full max-w-[800px] relative">
+<div class="bg-surface-container-lowest rounded-xl custom-shadow-level-2 border border-outline-variant/10 flex items-end p-sm transition-all focus-within:ring-2 focus-within:ring-primary/20">
+<textarea class="w-full bg-transparent border-none focus:ring-0 resize-none max-h-32 min-h-[44px] py-xs px-sm font-body-md text-body-md text-on-surface placeholder-on-surface-variant caret-[#8FA989] scrollbar-hide" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" placeholder="Ask Botanica..." rows="1"></textarea>
+<button class="bg-primary-container text-white w-10 h-10 rounded-lg flex items-center justify-center hover:bg-primary transition-colors shrink-0 mb-[2px] ml-sm">
+<span class="material-symbols-outlined" data-icon="arrow_upward">arrow_upward</span>
+</button>
+</div>
+<div class="text-center mt-xs">
+<span class="text-[10px] text-on-surface-variant/60 font-body-md">Botanica AI can make mistakes. Consider verifying important information.</span>
+</div>
+</div>
+</div>
+</main>
+</body></html>

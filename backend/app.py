@@ -61,6 +61,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "Bank-of-Librio RAG API"}
+
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
+
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "vector_db": "ChromaDB", "stats": vector_store.get_stats()}

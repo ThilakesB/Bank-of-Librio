@@ -12,32 +12,32 @@ An enterprise-grade Retrieval-Augmented Generation (RAG) system built for bank c
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Frontend (React + Vite)"]
-        UI[User Interface] -->|1. Query / Document Upload| APIClient[API Service]
+    subgraph Frontend["Frontend (React + Vite)"]
+        UI["User Interface"]
+        APIClient["API Service"]
+        UI --> APIClient
     end
 
-    subgraph Backend ["Backend (FastAPI Engine)"]
-        APIClient -->|2. HTTP Request| FastAPI[FastAPI App]
-        
-        subgraph Ingestion ["Document Processor"]
-            FastAPI -->|Upload Files / CSV| DocProc[Document Processor]
-            DocProc -->|Recursive Chunking| Chunks[Text Chunks & Metadata]
-            Chunks -->|Embedding Model| Embedder[Sentence Transformer / ONNX]
-        end
-
-        subgraph Storage ["Vector Database"]
-            Embedder -->|Store Vector Vectors| Chroma[ChromaDB Vector Store]
-        end
-
-        subgraph RAG ["RAG Query Engine"]
-            FastAPI -->|3. Search Query| VectorQuery[Vector Similarity Search]
-            VectorQuery -->|4. Top-K Chunks| Chroma
-            Chroma -->|5. Relevant Context| ResponseSynth[Response Synthesizer]
-            ResponseSynth -->|6. Answer + Citations| FastAPI
-        end
+    subgraph Backend["FastAPI Server"]
+        API["FastAPI App"]
+        DocProc["Document Processor"]
+        RAGEngine["RAG Search & Synthesis"]
     end
 
-    FastAPI -->|7. JSON Response| UI
+    subgraph Database["ChromaDB Vector Store"]
+        Embeddings["Sentence Transformers"]
+        VectorDB["Chroma Vector Database"]
+    end
+
+    APIClient -->|"1. User Query / Upload"| API
+    API -->|"2. Document Ingestion"| DocProc
+    DocProc -->|"3. Text Chunks & Metadata"| Embeddings
+    Embeddings -->|"4. Index Vectors"| VectorDB
+    API -->|"5. Search Query"| RAGEngine
+    RAGEngine -->|"6. Similarity Search"| VectorDB
+    VectorDB -->|"7. Top-K Context"| RAGEngine
+    RAGEngine -->|"8. Synthesized Answer"| API
+    API -->|"9. JSON Response"| APIClient
 ```
 
 ---

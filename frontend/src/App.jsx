@@ -4,6 +4,7 @@ import ChatFeed from "./components/ChatFeed";
 import DocumentDrawer from "./components/DocumentDrawer";
 import UploadModal from "./components/UploadModal";
 import ChunkInspectorModal from "./components/ChunkInspectorModal";
+import SettingsModal from "./components/SettingsModal";
 import { checkHealth, fetchDocuments, queryRAG } from "./api";
 import { playSendSound } from "./utils";
 
@@ -26,6 +27,8 @@ export default function App() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showInspector, setShowInspector] = useState(false);
   const [inspectorChunks, setInspectorChunks] = useState([]);
+  const [showSettings, setShowSettings] = useState(false);
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem("gemini_api_key") || "");
 
   const refreshStats = useCallback(async () => {
     try {
@@ -67,7 +70,7 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const data = await queryRAG(query, 5);
+      const data = await queryRAG(query, 5, apiKey);
 
       const aiMsg = {
         id: `msg-${++messageIdCounter}`,
@@ -134,6 +137,7 @@ export default function App() {
         onToggleMute={() => setIsMuted((prev) => !prev)}
         onToggleDrawer={() => setShowDrawer((prev) => !prev)}
         onOpenUpload={() => setShowUploadModal(true)}
+        onOpenSettings={() => setShowSettings(true)}
       />
 
       {/* App Workspace */}
@@ -167,6 +171,14 @@ export default function App() {
         <ChunkInspectorModal
           chunks={inspectorChunks}
           onClose={() => setShowInspector(false)}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          onSave={(key) => setApiKey(key)}
         />
       )}
     </div>

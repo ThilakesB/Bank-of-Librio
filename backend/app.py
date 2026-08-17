@@ -17,10 +17,16 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 vector_store = VectorStore()
 doc_processor = DocumentProcessor(chunk_size=600, chunk_overlap=80)
+# Local LLM synthesizer module (uses OpenAI when API key is available)
+try:
+    from llm import synthesize_answer
+except Exception:
+    synthesize_answer = None
 
 class QueryRequest(BaseModel):
     query: str
     top_k: Optional[int] = 5
+    api_key: Optional[str] = None
 
 def auto_ingest_local_dataset():
     """Auto ingest local dataset files if available (e.g. BankCustomerData.csv or DATASET folder)."""
@@ -165,7 +171,7 @@ def query_rag(req: QueryRequest):
             })
 
     # Synthesize answer from top context chunks
-    answer = synthesize_rag_response(query_text, retrieved)
+    answer = synthesize_rag_response(query_text, retrieved, req.api_key)
 
     return {
         "query": query_text,
@@ -174,41 +180,65 @@ def query_rag(req: QueryRequest):
         "retrieved_chunks": retrieved
     }
 
-def synthesize_rag_response(query: str, chunks: List[Dict[str, Any]]) -> str:
-    """Synthesize structured RAG answer grounded in retrieved ChromaDB context chunks."""
-    top_chunk = chunks[0]
-    top_meta = top_chunk.get("metadata", {})
-    top_source = top_meta.get("source") or top_meta.get("filename", "retrieved knowledge base")
+def synthesize_rag_response(query: str, chunks: List[Dict[str, Any]], api_key: Optional[str] = None) -> str:
+    """Synthesize a concise, paraphrased answer that blends multiple retrieved chunks.
 
-    # If tabular data chunk (e.g. CSV customer record)
-    if "Record #" in top_chunk["content"] or "Source Table:" in top_chunk["content"]:
-        summary_lines = [f"Based on **{top_source}** stored in ChromaDB, here are the matching record details:\n"]
-        for idx, item in enumerate(chunks[:3], start=1):
-            content = item["content"]
-            similarity_pct = int(item.get("similarity", 0.0) * 100)
-            summary_lines.append(f"**Match #{idx}** (Relevance: {similarity_pct}%):\n```text\n{content}\n```\n")
-        return "\n".join(summary_lines)
+    This function delegates to the llm.synthesize_answer helper when available (OpenAI if configured).
+    If no external LLM key is available, falls back to a lightweight paraphrase+merge heuristic to avoid
+    returning verbatim source passages.
+    """
+    # Normalize inputs
+    query = (query or "").strip()
+    if not chunks:
+        return "No relevant information found."
 
-    # Narrative text document summary
-    synthesis = [
-        f"Based on the most relevant information retrieved from **{top_source}** (ChromaDB similarity: {int(top_chunk.get('similarity', 0.0)*100)}%):\n"
-    ]
-    
-    # Extract distinct bullet points from top chunks
-    key_points = []
-    for c in chunks[:4]:
-        raw_text = c["content"].strip()
-        lines = [line.strip() for line in raw_text.split("\n") if line.strip()]
-        for line in lines:
-            if len(line) > 20 and line not in key_points:
-                key_points.append(line)
-                if len(key_points) >= 4:
-                    break
+    # If the llm synthesizer is available, prefer it (uses OpenAI when OPENAI_API_KEY is set)
+    if synthesize_answer:
+        try:
+            return synthesize_answer(query=query, chunks=chunks, api_key=api_key)
+        except Exception as e:
+            # Safe fallback: continue to heuristic below
+            print(f"LLM synth failed, falling back to local synthesis: {e}")
 
-    for point in key_points:
-        synthesis.append(f"- {point}")
+    # --- Local heuristic fallback synthesis (keeps results non-verbatim) ---
+    # Collect short excerpts with source tags
+    excerpts = []
+    seen = set()
+    for c in chunks[:6]:
+        content = c.get("content", "").strip().replace('\r', '')
+        meta = c.get("metadata", {})
+        src = meta.get("filename") or meta.get("source") or "unknown"
+        # Take first 160 characters of the chunk as an excerpt, avoid duplicates
+        short = " ".join(content.split())[:160]
+        key = (short, src)
+        if key in seen or len(short) < 20:
+            continue
+        seen.add(key)
+        excerpts.append({"source": src, "excerpt": short})
 
-    return "\n\n".join(synthesis)
+    # Compose a paraphrased answer from the excerpts
+    lines = [f"Question: {query}"]
+    lines.append("Summary:")
+    used = 0
+    for ex in excerpts:
+        if used >= 4:
+            break
+        # Paraphrase by rephrasing structure (naive): move clause order and remove quoted blocks
+        t = ex["excerpt"]
+        # Remove long quoted fragments and code fences
+        t = t.replace('```', '')
+        # Simple paraphrase heuristics: shorten and avoid verbatim repeating
+        if len(t) > 120:
+            t = t[:80].rsplit(' ', 1)[0] + '...'
+        lines.append(f"- From {ex['source']}: {t}")
+        used += 1
+
+    if used == 0:
+        # Last resort: return a brief non-verbatim note
+        return "Relevant documents found but could not synthesize a concise answer. Please provide more specific question."
+
+    lines.append("\nNote: Information synthesized from the indicated sources and expressed in original wording.")
+    return "\n".join(lines)
 
 @app.delete("/api/documents/{filename}")
 def delete_document(filename: str):

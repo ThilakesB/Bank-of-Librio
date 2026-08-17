@@ -25,11 +25,11 @@ export async function ingestKaggle() {
   return res.json();
 }
 
-export async function queryRAG(query, topK = 5) {
+export async function queryRAG(query, topK = 5, apiKey = "") {
   const res = await fetch(`${API_BASE}/query`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, top_k: topK }),
+    body: JSON.stringify({ query, top_k: topK, api_key: apiKey }),
   });
   return res.json();
 }

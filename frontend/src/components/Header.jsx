@@ -6,6 +6,7 @@ export default function Header({
   onToggleMute,
   onToggleDrawer,
   onOpenUpload,
+  onOpenSettings,
 }) {
   return (
     <header className="bg-surface/90 backdrop-blur-md border-b border-outline-variant px-4 md:px-8 py-3 shrink-0 z-40 relative">
@@ -18,7 +19,7 @@ export default function Header({
             aria-label="Toggle Document Drawer"
             className="text-primary hover:text-primary-fixed-dim transition-colors p-2 rounded-full hover:bg-surface-variant flex items-center justify-center cursor-pointer"
           >
-            <span className="material-symbols-outlined text-2xl">menu</span>
+            <span className="material-symbols-outlined text-2xl">Menu</span>
           </button>
 
           <div className="flex flex-col">
@@ -44,6 +45,16 @@ export default function Header({
             <span className="material-symbols-outlined text-xl">
               {isMuted ? "volume_off" : "volume_up"}
             </span>
+          </button>
+
+          {/* Settings Button */}
+          <button
+            onClick={onOpenSettings}
+            aria-label="Open settings"
+            title="Settings"
+            className="text-primary hover:text-primary-fixed-dim p-2 rounded-full hover:bg-surface-variant flex items-center justify-center transition-colors cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-xl">settings</span>
           </button>
 
           {/* Stats Button */}

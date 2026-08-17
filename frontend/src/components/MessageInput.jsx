@@ -59,7 +59,7 @@ export default function MessageInput({ onSubmit }) {
 
         <div className="text-center mt-2">
           <span className="text-[11px] text-on-surface-variant/70 font-['Source_Serif_4'] tracking-wide">
-            ChromaDB RAG Vector Store &amp; In-Memory Data Indexing
+            Bank of Libreo &amp; 
           </span>
         </div>
       </div>

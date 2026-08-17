@@ -1,6 +1,6 @@
-<div align="center">
+<img src="./assets/bank-of-librio-banner.png" alt="Bank of Librio" width="100%" style="border-radius:8px;" />
 
-<img src="./docs/logo.png" alt="Bank of Libreo Logo" width="480"/>
+<div align="center">
 
 # Bank of Libreo — Intelligent Banking RAG System
 
@@ -18,13 +18,13 @@
 
 ## 🖥️ Live Preview
 
-<div align="center">
-
-<img src="./docs/app-screenshot.png" alt="Bank of Libreo — Oracle Chat UI" width="900" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"/>
+<p align="center">
+  <img src="./docs/app-screenshot.png"
+       alt="Bank of Libreo — Oracle Chat UI"
+       width="100%" />
+</p>
 
 *The Oracle of Libreo — RAG-powered chat interface connected to ChromaDB vector store*
-
-</div>
 
 ---
 
@@ -180,6 +180,6 @@ npm run dev
 
 <div align="center">
 
-Built with ⚡ by **Bank of Libreo** — *Knowledge at the speed of thought*
+Built with ⚡ by **Bank of Librio** — *Banking with Strength. Built on Trust.*
 
 </div>
